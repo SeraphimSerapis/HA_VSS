@@ -1,0 +1,13 @@
+{
+  "domain": "vss",
+  "name": "Visionect API integration",
+  "documentation": "https://pypi.org/project/vss-python-api/",
+  "dependencies": [],
+  "config_flow": false,
+  "codeowners": [
+    "@seraphimserapis"
+  ],
+  "requirements": [
+    "vss-python-api>=0.9.7"
+  ]
+}
