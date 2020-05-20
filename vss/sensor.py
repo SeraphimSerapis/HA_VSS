@@ -82,7 +82,7 @@ class VSSDisplay(Entity):
             "rssi": device['Status']['RSSI'],
             "height": self._height,
             "width": self._width,
-            "orietnation": self._orientation,
+            "orientation": self._orientation,
             "rotation": self._rotation,
         }
 
@@ -117,10 +117,7 @@ class VSSDisplay(Entity):
         return self._attributes
 
     def update(self):
-        """Fetch new state data for this sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for this sensor."""
         status_code, device = self._vss.get_device(self._uuid)
 
         if not status_code == 200:
@@ -136,8 +133,6 @@ class VSSDisplay(Entity):
         self._state = device['Status']['Battery']
         self._display = device['Displays'][0]
         self._rotation = self._display['Rotation']
-        self._height = self._display['Height']
-        self._width = self._display['Width']
         self._orientation = None
 
         if self._rotation is 0 or 2:
@@ -145,11 +140,7 @@ class VSSDisplay(Entity):
         else:
             self._orientation = 'Landscape'
 
-        self._attributes = {
-            "connected": device['State'],
-            "rssi": device['Status']['RSSI'],
-            "height": self._height,
-            "width": self._width,
-            "orietnation": self._orientation,
-            "rotation": self._rotation,
-        }
+        self._attributes["connected"] = device['State']
+        self._attributes["rssi"] = device['Status']['RSSI']
+        self._attributes["orientation"]= self._orientation
+        self._attributes["rotation"] = self._rotation
