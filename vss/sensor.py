@@ -131,8 +131,25 @@ class VSSDisplay(Entity):
             _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
             return
 
+        self._uuid = device['Uuid']
+        self._online = device['State']
         self._state = device['Status']['Battery']
+        self._display = device['Displays'][0]
+        self._rotation = self._display['Rotation']
+        self._height = self._display['Height']
+        self._width = self._display['Width']
+        self._orientation = None
+
+        if self._rotation is 0 or 2:
+            self._orientation = 'Portrait'
+        else:
+            self._orientation = 'Landscape'
+
         self._attributes = {
             "connected": device['State'],
             "rssi": device['Status']['RSSI'],
+            "height": self._height,
+            "width": self._width,
+            "orietnation": self._orientation,
+            "rotation": self._rotation,
         }
