@@ -1,4 +1,4 @@
-"""Platform for light integration."""
+"""Platform for VSS sensor integration."""
 import logging
 
 from vss_python_api import ApiDeclarations
@@ -36,17 +36,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Setup connection with devices/cloud
     vss_api = ApiDeclarations(host, key, secret)
-
-    # Verify that passed in configuration works
-    # if not hub.is_valid_login():
-    #     _LOGGER.error("Could not connect to AwesomeLight hub")
-    #     return
-
-    # Add devices
-    # add_entities(VSS(light) for light in hub.lights())
-
-    _LOGGER.debug("Connected to api")
-
     status_code, response = vss_api.get_all_devices()
 
     if not status_code == 200:
@@ -72,12 +61,29 @@ class VSSDisplay(Entity):
         """Initialize the VSS display."""
         self._vss = vss
         self._device_class = DEVICE_CLASS_BATTERY
+        self._unit_of_measurement = '%'
+        self._icon = 'mdi:tablet'
         self._uuid = device['Uuid']
-        self._online = device["State"]
-        self._state = device["Status"]["Battery"]
+        self._online = device['State']
+        self._state = device['Status']['Battery']
+        self._display = device['Displays'][0]
+        self._rotation = _display['Rotation']
+        self._height = _display['Height']
+        self._width = _display['Width']
+        self._orientation = None
+
+        if self._rotation is 0 or 2:
+            self._orientation = 'Portrait'
+        else:
+            self._orientation = 'Landscape'
+
         self._attributes = {
-            "connected": device["State"],
-            "rssi": device["Status"]["RSSI"],
+            "connected": device['State'],
+            "rssi": device['Status']['RSSI'],
+            "height": self._height,
+            "width": self._width,
+            "orietnation": self._orientation,
+            "rotation": self._rotation,
         }
 
     @property
@@ -87,8 +93,13 @@ class VSSDisplay(Entity):
 
     @property
     def name(self):
-        """Return the display name of this device."""
+        """Return the display name of this sensor."""
         return self._uuid
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        return self._icon
 
     @property
     def state(self):
@@ -96,12 +107,17 @@ class VSSDisplay(Entity):
         return self._state
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
+
+    @property
     def device_state_attributes(self):
         """Return additional attributes of the sensor."""
         return self._attributes
 
     def update(self):
-        """Fetch new state data for this light.
+        """Fetch new state data for this sensor.
 
         This is the only method that should fetch new data for Home Assistant.
         """
@@ -115,8 +131,8 @@ class VSSDisplay(Entity):
             _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
             return
 
-        self._state = device["Status"]["Battery"]
+        self._state = device['Status']['Battery']
         self._attributes = {
-            "connected": device["State"],
-            "rssi": device["Status"]["RSSI"],
+            "connected": device['State'],
+            "rssi": device['Status']['RSSI'],
         }
