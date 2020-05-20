@@ -67,9 +67,9 @@ class VSSDisplay(Entity):
         self._online = device['State']
         self._state = device['Status']['Battery']
         self._display = device['Displays'][0]
-        self._rotation = _display['Rotation']
-        self._height = _display['Height']
-        self._width = _display['Width']
+        self._rotation = self._display['Rotation']
+        self._height = self._display['Height']
+        self._width = self._display['Width']
         self._orientation = None
 
         if self._rotation is 0 or 2:
