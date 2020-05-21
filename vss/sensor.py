@@ -48,7 +48,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for device in response:
-        _LOGGER.debug("Got device")
         _LOGGER.debug("Setting up %s ...", device)
         devices.append(VSSDisplay(device, vss_api))
 
@@ -63,14 +62,18 @@ class VSSDisplay(Entity):
         self._device_class = DEVICE_CLASS_BATTERY
         self._unit_of_measurement = '%'
         self._icon = 'mdi:tablet'
-        self._uuid = device['Uuid']
-        self._online = device['State']
-        self._state = device['Status']['Battery']
         self._display = device['Displays'][0]
-        self._rotation = self._display['Rotation']
         self._height = self._display['Height']
+        self._online = device['State']
+        self._rotation = self._display['Rotation']
+        self._state = device['Status']['Battery']
+        self._uuid = device['Uuid']
         self._width = self._display['Width']
+        self._name = None
         self._orientation = None
+
+        if device['Options']['Name'] is not None:
+            self._name = device['Options']['Name']
 
         if self._rotation is 0 or 2:
             self._orientation = 'Portrait'
@@ -94,7 +97,10 @@ class VSSDisplay(Entity):
     @property
     def name(self):
         """Return the display name of this sensor."""
-        return self._uuid
+        if self._name is not None:
+          return self._name
+        else:
+          return self._uuid
 
     @property
     def icon(self):
@@ -133,7 +139,9 @@ class VSSDisplay(Entity):
         self._state = device['Status']['Battery']
         self._display = device['Displays'][0]
         self._rotation = self._display['Rotation']
-        self._orientation = None
+
+        if device['Options']['Name'] is not None:
+            self._name = device['Options']['Name']
 
         if self._rotation is 0 or 2:
             self._orientation = 'Portrait'
