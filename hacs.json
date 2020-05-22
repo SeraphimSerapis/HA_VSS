@@ -1,0 +1,5 @@
+{
+  "name": "VSS HA component",
+  "domains": ["vss"],
+  "homeassistant": "0.109.0"
+}
