@@ -6,25 +6,29 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+
 # Import the device class from the component that you want to support
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA)
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
-    DEVICE_CLASS_BATTERY)
+    DEVICE_CLASS_BATTERY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    # http://IP:8081/
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        # http://IP:8081/
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
+    }
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the VSS platform."""
@@ -53,6 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices)
 
+
 class VSSDisplay(Entity):
     """Representation of an VSS display."""
 
@@ -60,29 +65,29 @@ class VSSDisplay(Entity):
         """Initialize the VSS display."""
         self._vss = vss
         self._device_class = DEVICE_CLASS_BATTERY
-        self._unit_of_measurement = '%'
-        self._icon = 'mdi:tablet'
-        self._display = device['Displays'][0]
-        self._height = self._display['Height']
-        self._online = device['State']
-        self._rotation = self._display['Rotation']
-        self._state = device['Status']['Battery']
-        self._uuid = device['Uuid']
-        self._width = self._display['Width']
+        self._unit_of_measurement = "%"
+        self._icon = "mdi:tablet"
+        self._display = device["Displays"][0]
+        self._height = self._display["Height"]
+        self._online = device["State"]
+        self._rotation = self._display["Rotation"]
+        self._state = device["Status"]["Battery"]
+        self._uuid = device["Uuid"]
+        self._width = self._display["Width"]
         self._name = None
         self._orientation = None
 
-        if device['Options']['Name'] is not None:
-            self._name = device['Options']['Name']
+        if device["Options"]["Name"] is not None:
+            self._name = device["Options"]["Name"]
 
-        if self._rotation == 0 or self._rotation 2:
-            self._orientation = 'Portrait'
+        if self._rotation == 0 or self._rotation == 2:
+            self._orientation = "Portrait"
         else:
-            self._orientation = 'Landscape'
+            self._orientation = "Landscape"
 
         self._attributes = {
-            "connected": device['State'],
-            "rssi": device['Status']['RSSI'],
+            "connected": device["State"],
+            "rssi": device["Status"]["RSSI"],
             "height": self._height,
             "width": self._width,
             "orientation": self._orientation,
@@ -98,9 +103,9 @@ class VSSDisplay(Entity):
     def name(self):
         """Return the display name of this sensor."""
         if self._name is not None:
-          return self._name
+            return self._name
         else:
-          return self._uuid
+            return self._uuid
 
     @property
     def icon(self):
@@ -134,21 +139,21 @@ class VSSDisplay(Entity):
             _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
             return
 
-        self._uuid = device['Uuid']
-        self._online = device['State']
-        self._state = device['Status']['Battery']
-        self._display = device['Displays'][0]
-        self._rotation = self._display['Rotation']
+        self._uuid = device["Uuid"]
+        self._online = device["State"]
+        self._state = device["Status"]["Battery"]
+        self._display = device["Displays"][0]
+        self._rotation = self._display["Rotation"]
 
-        if device['Options']['Name'] is not None:
-            self._name = device['Options']['Name']
+        if device["Options"]["Name"] is not None:
+            self._name = device["Options"]["Name"]
 
-        if self._rotation == 0 or self._rotation 2:
-            self._orientation = 'Portrait'
+        if self._rotation == 0 or self._rotation == 2:
+            self._orientation = "Portrait"
         else:
-            self._orientation = 'Landscape'
+            self._orientation = "Landscape"
 
-        self._attributes["connected"] = device['State']
-        self._attributes["rssi"] = device['Status']['RSSI']
-        self._attributes["orientation"]= self._orientation
+        self._attributes["connected"] = device["State"]
+        self._attributes["rssi"] = device["Status"]["RSSI"]
+        self._attributes["orientation"] = self._orientation
         self._attributes["rotation"] = self._rotation
