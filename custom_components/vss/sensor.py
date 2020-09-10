@@ -75,7 +75,7 @@ class VSSDisplay(Entity):
         if device['Options']['Name'] is not None:
             self._name = device['Options']['Name']
 
-        if self._rotation is 0 or 2:
+        if self._rotation == 0 or self._rotation 2:
             self._orientation = 'Portrait'
         else:
             self._orientation = 'Landscape'
@@ -143,7 +143,7 @@ class VSSDisplay(Entity):
         if device['Options']['Name'] is not None:
             self._name = device['Options']['Name']
 
-        if self._rotation is 0 or 2:
+        if self._rotation == 0 or self._rotation 2:
             self._orientation = 'Portrait'
         else:
             self._orientation = 'Landscape'
