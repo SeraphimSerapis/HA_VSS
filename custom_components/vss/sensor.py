@@ -1,26 +1,24 @@
 """Platform for VSS sensor integration."""
 import logging
 
-from vss_python_api import ApiDeclarations
-
 from homeassistant.helpers.entity import Entity
 
-# Import the device class from the component that you want to support
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
     DEVICE_CLASS_BATTERY,
 )
 
+from vss_python_api import ApiDeclarations
+
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    host = entry.data[CONF_HOST]
-    key = entry.data[CONF_CLIENT_ID]
-    secret = entry.data[CONF_CLIENT_SECRET]
+    host = config_entry.data[CONF_HOST]
+    key = config_entry.data[CONF_CLIENT_ID]
+    secret = config_entry.data[CONF_CLIENT_SECRET]
 
     vss_api = ApiDeclarations(host, key, secret)
     status_code, response = await hass.async_add_executor_job(
@@ -34,6 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     if new_devices:
         async_add_devices(new_devices)
+
 
 class VSSDisplay(Entity):
     """Representation of an VSS display."""
@@ -104,18 +103,17 @@ class VSSDisplay(Entity):
         """Return additional attributes of the sensor."""
         return self._attributes
 
-    async def async_update(self):
+    def update(self):
         """Fetch new state data for this sensor."""
-        status_code, device = await hass.async_add_executor_job(
-            self._vss.get_device(self._uuid)
-        )
+        status_code, device = self._vss.get_device(self._uuid)
 
         if not status_code == 200:
             _LOGGER.error("Could not connect to VSS")
             return
 
         if device is None:
-            _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
+            _LOGGER.debug(
+              "Received no data for device {id}".format(**self._uuid))
             return
 
         self._uuid = device["Uuid"]
@@ -127,10 +125,9 @@ class VSSDisplay(Entity):
         if device["Options"]["Name"] is not None:
             self._name = device["Options"]["Name"]
 
+        self._orientation = "Landscape"
         if self._rotation == 0 or self._rotation == 2:
             self._orientation = "Portrait"
-        else:
-            self._orientation = "Landscape"
 
         self._attributes["connected"] = device["State"]
         self._attributes["rssi"] = device["Status"]["RSSI"]

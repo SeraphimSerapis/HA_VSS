@@ -33,12 +33,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     # Setup connection with devices/cloud
     vss_api = ApiDeclarations(host, key, secret)
 
-    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices())
+    status_code, response = await hass.async_add_executor_job(
+      vss_api.get_all_devices()
+    )
 
     if not status_code == 200:
         _LOGGER.error("Could not connect to VSS")
-        thow CannotConnect
-        return
+        raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {"title": data["host"]}
@@ -57,11 +58,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
 
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=user_input
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
+            except InvalidHost:
+                errors["base"] = "invalid_host"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -69,6 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
