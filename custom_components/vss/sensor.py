@@ -2,10 +2,8 @@
 import logging
 
 from vss_python_api import ApiDeclarations
-import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 # Import the device class from the component that you want to support
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -19,44 +17,23 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        # http://IP:8081/
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-    }
-)
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    host = entry.data[CONF_HOST]
+    key = entry.data[CONF_CLIENT_ID]
+    secret = entry.data[CONF_CLIENT_SECRET]
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the VSS platform."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
-    host = config[CONF_HOST]
-    key = config[CONF_CLIENT_ID]
-    secret = config.get(CONF_CLIENT_SECRET)
-
-    # Setup connection with devices/cloud
     vss_api = ApiDeclarations(host, key, secret)
-    status_code, response = vss_api.get_all_devices()
+    status_code, response = await hass.async_add_executor_job(
+        vss_api.get_all_devices()
+    )
 
-    if not status_code == 200:
-        _LOGGER.error("Could not connect to VSS")
-        return
-
-    if response is None:
-        _LOGGER.error("No response from VSS")
-        return
-
-    devices = []
+    new_devices = []
     for device in response:
         _LOGGER.debug("Setting up %s ...", device)
-        devices.append(VSSDisplay(device, vss_api))
+        new_devices.append(VSSDisplay(device, vss_api))
 
-    add_entities(devices)
-
+    if new_devices:
+        async_add_devices(new_devices)
 
 class VSSDisplay(Entity):
     """Representation of an VSS display."""
@@ -127,9 +104,11 @@ class VSSDisplay(Entity):
         """Return additional attributes of the sensor."""
         return self._attributes
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for this sensor."""
-        status_code, device = self._vss.get_device(self._uuid)
+        status_code, device = await hass.async_add_executor_job(
+            self._vss.get_device(self._uuid)
+        )
 
         if not status_code == 200:
             _LOGGER.error("Could not connect to VSS")
