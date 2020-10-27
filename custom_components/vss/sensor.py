@@ -7,6 +7,13 @@ from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from vss_python_api import ApiDeclarations
 
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    MODEL,
+    SW_VERSION
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -14,6 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     host = config_entry.data["host"]
     key = config_entry.data["username"]
     secret = config_entry.data["password"]
+
+    parent = hass.data[DOMAIN][config_entry.entry_id]
 
     vss_api = ApiDeclarations(host, key, secret)
     status_code, response = await hass.async_add_executor_job(
@@ -23,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     new_devices = []
     for device in response:
         _LOGGER.debug("Setting up %s ...", device)
-        new_devices.append(VSSDisplay(device, vss_api))
+        new_devices.append(VSSDisplay(device, vss_api, parent))
 
     if new_devices:
         async_add_devices(new_devices)
@@ -32,9 +41,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 class VSSDisplay(Entity):
     """Representation of an VSS display."""
 
-    def __init__(self, device, vss):
+    def __init__(self, device, vss, parent):
         """Initialize the VSS display."""
         self._vss = vss
+        self._device = parent
         self._device_class = DEVICE_CLASS_BATTERY
         self._unit_of_measurement = "%"
         self._icon = "mdi:tablet"
@@ -71,12 +81,30 @@ class VSSDisplay(Entity):
         return self._device_class
 
     @property
+    def device_info(self):
+        return {
+            "identifiers": {
+                (DOMAIN, self._uuid),
+            },
+            "name": self._name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "sw_version": SW_VERSION,
+            "via_device": (DOMAIN, self._device),
+        }
+
+    @property
     def name(self):
         """Return the display name of this sensor."""
         if self._name is not None:
             return self._name
         else:
             return self._uuid
+
+    @property
+    def unique_id(self):
+        """Return the uuid of this sensor."""
+        return f"{self._uuid}_sensor"
 
     @property
     def icon(self):
