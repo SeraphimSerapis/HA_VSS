@@ -6,16 +6,10 @@ from vss_python_api import ApiDeclarations
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_HOST,
-)
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -23,9 +17,9 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    host = data[CONF_HOST]
-    key = data[CONF_CLIENT_ID]
-    secret = data[CONF_CLIENT_SECRET]
+    host = data["host"]
+    key = data["username"]
+    secret = data["password"]
 
     if len(host) < 3:
         raise InvalidHost
@@ -34,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     vss_api = ApiDeclarations(host, key, secret)
 
     status_code, response = await hass.async_add_executor_job(
-      vss_api.get_all_devices()
+      vss_api.get_all_devices
     )
 
     if not status_code == 200:
@@ -46,13 +40,19 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Panasonic AC."""
+    """Handle the config flow for VSS."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        DATA_SCHEMA = vol.Schema({
+            vol.Required("host"): str,
+            vol.Required("username"): str,
+            vol.Required("password"): str,
+        })
+
         errors = {}
         if user_input is not None:
             try:

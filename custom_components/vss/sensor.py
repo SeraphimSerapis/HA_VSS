@@ -3,12 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_HOST,
-    DEVICE_CLASS_BATTERY,
-)
+from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from vss_python_api import ApiDeclarations
 
@@ -16,13 +11,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    host = config_entry.data[CONF_HOST]
-    key = config_entry.data[CONF_CLIENT_ID]
-    secret = config_entry.data[CONF_CLIENT_SECRET]
+    host = config_entry.data["host"]
+    key = config_entry.data["username"]
+    secret = config_entry.data["password"]
 
     vss_api = ApiDeclarations(host, key, secret)
     status_code, response = await hass.async_add_executor_job(
-        vss_api.get_all_devices()
+        vss_api.get_all_devices
     )
 
     new_devices = []

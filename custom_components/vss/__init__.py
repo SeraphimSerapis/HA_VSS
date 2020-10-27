@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import device
+from .device import Device
 
 PLATFORMS = ["sensor"]
 
@@ -19,7 +19,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VSS from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = device.Device(hass, entry.data["host"])
+    hass.data[DOMAIN][entry.entry_id] = Device(hass, entry.data["host"])
 
     for component in PLATFORMS:
         hass.async_create_task(

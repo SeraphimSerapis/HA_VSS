@@ -4,6 +4,8 @@
 class Device:
     """A dummy device"""
 
+    manufacturer = "Visionect"
+
     def __init__(self, hass, host):
         """Init dummy hub."""
         self._host = host
