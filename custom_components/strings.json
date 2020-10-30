@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VSS API",
+        "description": "Enter your VSS username and password",
+        "data": { "username": "Username", "password": "Password" }
+      }
+    },
+    "abort": {
+      "device_timeout": "Timeout connecting to the device.",
+      "device_fail": "Unexpected error creating device.",
+      "already_configured": "Device is already configured"
+    }
+  }
+}

@@ -1,9 +1,9 @@
 {
   "domain": "vss",
   "name": "VSS API",
-  "documentation": "https://pypi.org/project/vss-python-api/",
+  "documentation": "https://github.com/SeraphimSerapis/HA_VSS",
   "dependencies": [],
   "config_flow": true,
   "codeowners": ["@seraphimserapis"],
-  "requirements": ["vss-python-api>=0.9.7"]
+  "requirements": ["vss-python-api==0.9.7"]
 }
