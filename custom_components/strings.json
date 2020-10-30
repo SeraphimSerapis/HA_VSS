@@ -4,13 +4,13 @@
       "user": {
         "title": "VSS API",
         "description": "Enter your VSS username and password",
-        "data": { "username": "Username", "password": "Password" }
+        "data": { "username": "Username", "password": "Password", "host": "Host (incl. http(s) and port)" }
       }
     },
     "abort": {
-      "device_timeout": "Timeout connecting to the device.",
-      "device_fail": "Unexpected error creating device.",
-      "already_configured": "Device is already configured"
+      "cannot_connect": "Cannot connect to the VSS server.",
+      "invalid_host": "Invalid host.",
+      "unknown": "Other error."
     }
   }
 }
