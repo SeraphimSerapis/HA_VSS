@@ -31,7 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     new_devices = []
     for device in response:
-        _LOGGER.debug("Setting up %s ...", device)
         new_devices.append(VSSDisplay(device, vss_api, parent))
 
     if new_devices:
