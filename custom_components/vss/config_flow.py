@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     if len(host) < 3:
         raise InvalidHost
 
-    vss_api = ApiDeclarations(f"{host}:{port}", username, password)
+    vss_api = ApiDeclarations(f"{host}:{port}/", username, password)
 
     status_code, response = await hass.async_add_executor_job(vss_api.get_all_device)
 

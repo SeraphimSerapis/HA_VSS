@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     parent = hass.data[DOMAIN][config_entry.entry_id]
 
-    vss_api = ApiDeclarations(f"{host}:{port}", username, password)
+    vss_api = ApiDeclarations(f"{host}:{port}/", username, password)
     status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
 
     new_devices = []
