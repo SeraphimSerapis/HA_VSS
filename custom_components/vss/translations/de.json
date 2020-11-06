@@ -2,11 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "VSS API",
-        "description": "Benutzernamen und Passwort eingeben",
+        "title": "VSS",
+        "description": "VSS Client ID und Client Secret eingeben",
         "data": {
-          "username": "Benutzername",
-          "password": "Passwort",
+          "client_id": "Client ID",
+          "client_secret": "Client Secret",
           "host": "Host (inkl. http(s))",
           "port": "Port"
         }

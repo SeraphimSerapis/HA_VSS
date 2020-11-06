@@ -19,8 +19,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     host = data["host"]
     port = data["port"]
-    username = data["username"]
-    password = data["password"]
+    client_id = data["client_id"]
+    client_secret = data["client_secret"]
 
     if port is None:
         port = "8081"
@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     if len(host) < 3:
         raise InvalidHost
 
-    vss_api = ApiDeclarations(f"{host}:{port}/", username, password)
+    vss_api = ApiDeclarations(f"{host}:{port}/", client_id, client_secret)
 
     status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
 
@@ -55,8 +55,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required("host"): str,
                 vol.Optional("port", default="8081"): str,
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                vol.Required("client_id"): str,
+                vol.Required("client_secret"): str,
             }
         )
 

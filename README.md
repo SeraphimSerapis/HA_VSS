@@ -8,7 +8,7 @@ The field `host` is supposed to point at your VSS Management Server address.
 
 The default port is `8081`.
 
-The `client_id` and `client_secret` are generated in the Users section of your VSS dashboard and are named `username` and `password` in this configuration.
+The `client_id` and `client_secret` are generated in the Users section of your VSS dashboard.
 
 ## Additional information
 

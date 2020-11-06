@@ -1,19 +1,16 @@
 # VSS for Home Assistant
 
-Integrate this `sensor` with the following snippet:
+Integrate this `sensor` by adding this integration as custom repository in [HACS](https://hacs.xyz/). Following, you will be able to add the integration via `Configuration -> Integrations -> VSS API`.
 
-```yaml
-platform: vss
-host: !secret vss_host
-client_id: !secret vss_client_id
-client_secret: !secret vss_client_secret
-```
+## Config flow
 
-The field `host` is supposed to point at port `8081` of your VSS setup. The `client_id` and `client_secret` are generated in the Users section of your VSS dashboard.
+The field `host` is supposed to point at your VSS Management Server address.
 
-Add `vss` into your Home Assistant's `custom_components` folder.
+The default port is `8081`.
 
-Additional reference:
+The `client_id` and `client_secret` are generated in the Users section of your VSS dashboard.
+
+## Additional information
 
 - [vss-python-api](https://pypi.org/project/vss-python-api/)
 - [VSS Server Management API](https://api.visionect.com/)

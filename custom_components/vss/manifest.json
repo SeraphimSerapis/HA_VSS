@@ -1,6 +1,6 @@
 {
   "domain": "vss",
-  "name": "VSS API",
+  "name": "VSS",
   "documentation": "https://github.com/SeraphimSerapis/HA_VSS",
   "dependencies": [],
   "config_flow": true,

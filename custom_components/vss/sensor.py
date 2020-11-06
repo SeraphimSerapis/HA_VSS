@@ -15,15 +15,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_devices):
     host = config_entry.data["host"]
     port = config_entry.data["port"]
-    username = config_entry.data["username"]
-    password = config_entry.data["password"]
+    client_id = config_entry.data["client_id"]
+    client_secret = config_entry.data["client_secret"]
 
     if port is None:
         port = "8081"
 
     parent = hass.data[DOMAIN][config_entry.entry_id]
 
-    vss_api = ApiDeclarations(f"{host}:{port}/", username, password)
+    vss_api = ApiDeclarations(f"{host}:{port}/", client_id, client_secret)
     status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
 
     new_devices = []
