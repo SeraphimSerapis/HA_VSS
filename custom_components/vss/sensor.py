@@ -7,12 +7,7 @@ from homeassistant.const import DEVICE_CLASS_BATTERY
 
 from vss_python_api import ApiDeclarations
 
-from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    SW_VERSION
-)
+from .const import DOMAIN, MANUFACTURER, MODEL, SW_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     parent = hass.data[DOMAIN][config_entry.entry_id]
 
     vss_api = ApiDeclarations(f"{host}:{port}", username, password)
-    status_code, response = await hass.async_add_executor_job(
-        vss_api.get_all_devices
-    )
+    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
 
     new_devices = []
     for device in response:
@@ -138,8 +131,7 @@ class VSSDisplay(Entity):
             return
 
         if device is None:
-            _LOGGER.debug(
-              "Received no data for device {id}".format(**self._uuid))
+            _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
             return
 
         self._uuid = device["Uuid"]

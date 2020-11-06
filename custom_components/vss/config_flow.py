@@ -33,7 +33,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     vss_api = ApiDeclarations(f"{host}:{port}", username, password)
 
-    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
+    status_code, response = await hass.async_add_executor_job(vss_api.get_all_device)
 
     if not status_code == 200:
         _LOGGER.error("Could not connect to VSS")
