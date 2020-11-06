@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VSS API",
+        "description": "Benutzernamen und Passwort eingeben",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort",
+          "host": "Host (inkl. http(s))",
+          "port": "Port"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Kann keine Verbindung zum VSS Server aufbauen.",
+      "invalid_host": "Host ungültig.",
+      "unknown": "Anderer Fehler."
+    }
+  }
+}
