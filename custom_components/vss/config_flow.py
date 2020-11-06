@@ -18,18 +18,22 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     host = data["host"]
-    key = data["username"]
-    secret = data["password"]
+    port = data["port"]
+    username = data["username"]
+    password = data["password"]
+
+    if port is None:
+        port = "8081"
+
+    if len(port) > 5:
+        raise InvalidPort
 
     if len(host) < 3:
         raise InvalidHost
 
-    # Setup connection with devices/cloud
-    vss_api = ApiDeclarations(host, key, secret)
+    vss_api = ApiDeclarations(f"{host}:{port}", username, password)
 
-    status_code, response = await hass.async_add_executor_job(
-      vss_api.get_all_devices
-    )
+    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
 
     if not status_code == 200:
         _LOGGER.error("Could not connect to VSS")
@@ -47,21 +51,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        DATA_SCHEMA = vol.Schema({
-            vol.Required("host"): str,
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-        })
+        DATA_SCHEMA = vol.Schema(
+            {
+                vol.Required("host"): str,
+                vol.Optional("port", default="8081"): str,
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
+        )
 
         errors = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
 
-                return self.async_create_entry(
-                    title=info["title"],
-                    data=user_input
-                )
+                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
@@ -81,3 +85,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate there is an invalid hostname."""
+
+
+class InvalidPort(exceptions.HomeAssistantError):
+    """Error to indicate there is an invalid port."""
