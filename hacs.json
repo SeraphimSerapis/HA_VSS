@@ -1,5 +1,5 @@
 {
   "name": "VSS HA component",
   "domains": ["vss"],
-  "homeassistant": "0.109.0"
+  "homeassistant": "2021.12.0"
 }
