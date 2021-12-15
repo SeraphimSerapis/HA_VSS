@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.components.sensor import SensorDeviceClass
 
 from vss_python_api import ApiDeclarations
 
@@ -72,9 +72,9 @@ class VSSDisplay(Entity):
         }
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
-        return self._device_class
+        return SensorDeviceClass.BATTERY
 
     @property
     def device_info(self):
