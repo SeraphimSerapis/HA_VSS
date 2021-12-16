@@ -5,7 +5,9 @@
   "dependencies": [],
   "config_flow": true,
   "codeowners": ["@seraphimserapis"],
-  "requirements": ["git+https://github.com/SeraphimSerapis/libpyvss@master"],
+  "requirements": [
+    "git+https://github.com/SeraphimSerapis/libpyvss@master#vss-python-api==0.9.7"
+  ],
   "iot_class": "local_polling",
   "version": "0.5"
 }
