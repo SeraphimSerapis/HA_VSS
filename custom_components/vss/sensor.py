@@ -1,9 +1,10 @@
 """Platform for VSS sensor integration."""
 import logging
 
-from homeassistant.helpers.entity import Entity
-
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+)
 
 from vss_python_api import ApiDeclarations
 
@@ -34,14 +35,14 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(new_devices)
 
 
-class VSSDisplay(Entity):
+class VSSDisplay(SensorEntity):
     """Representation of an VSS display."""
 
     def __init__(self, device, vss, parent):
         """Initialize the VSS display."""
         self._vss = vss
         self._device = parent
-        self._device_class = DEVICE_CLASS_BATTERY
+        self._device_class = SensorDeviceClass.BATTERY
         self._unit_of_measurement = "%"
         self._icon = "mdi:tablet"
         self._display = device["Displays"][0]
@@ -131,7 +132,8 @@ class VSSDisplay(Entity):
             return
 
         if device is None:
-            _LOGGER.debug("Received no data for device {id}".format(**self._uuid))
+            _LOGGER.debug(
+                "Received no data for device {id}".format(**self._uuid))
             return
 
         self._uuid = device["Uuid"]
