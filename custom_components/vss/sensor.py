@@ -6,7 +6,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 
-from vss_python_api import ApiDeclarations
+from vss import ApiDeclarations
 
 from .const import DOMAIN, MANUFACTURER, MODEL, SW_VERSION
 

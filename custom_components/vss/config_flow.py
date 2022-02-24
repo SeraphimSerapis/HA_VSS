@@ -1,7 +1,7 @@
 """Config flow for the VSS integration."""
 import logging
 
-from vss_python_api import ApiDeclarations
+from vss import ApiDeclarations
 
 import voluptuous as vol
 
