@@ -1,7 +1,3 @@
-# Important note
-
-Currently broken due to `vss-python-api` being removed from [PyPi](https://pypi.org/project/vss-python-api/). I haven't had the bandwidth to explore alternatives and chose to put this project on hold for now.
-
 # VSS for Home Assistant
 
 Integrate this `sensor` by adding this integration as custom repository in [HACS](https://hacs.xyz/). Following, you will be able to add the integration via `Configuration -> Integrations -> VSS API`.
