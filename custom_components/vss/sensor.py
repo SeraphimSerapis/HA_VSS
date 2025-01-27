@@ -23,6 +23,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         port = "8081"
 
     parent = hass.data[DOMAIN][config_entry.entry_id]
+    if parent is None:
+        parent = "Joan"
 
     vss_api = ApiDeclarations(f"{host}:{port}/", client_id, client_secret)
     status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
