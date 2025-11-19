@@ -89,11 +89,11 @@ class VSSDisplay(SensorEntity):
             "manufacturer": MANUFACTURER,
             "model": MODEL,
             "sw_version": SW_VERSION,
-            "via_device": (DOMAIN, self._device),
+            "via_device": (DOMAIN, self._device.hub_id),
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the display name of this sensor."""
         if self._name is not None:
             return self._name
@@ -101,12 +101,12 @@ class VSSDisplay(SensorEntity):
             return self._uuid
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the uuid of this sensor."""
         return f"{self._uuid}_sensor"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon for this sensor."""
         return self._icon
 
@@ -116,12 +116,12 @@ class VSSDisplay(SensorEntity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional attributes of the sensor."""
         return self._attributes
 

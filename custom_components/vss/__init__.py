@@ -4,6 +4,8 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from homeassistant.helpers import device_registry as dr
+
 from .const import DOMAIN
 from .device import Device
 
@@ -20,6 +22,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VSS from a config entry."""
     hass.data[DOMAIN][entry.entry_id] = Device(hass, entry.data["host"])
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data["host"].lower())},
+        manufacturer="Visionect",
+        name=entry.data["host"],
+        model="VSS Hub",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
