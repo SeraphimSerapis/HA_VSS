@@ -4,154 +4,152 @@ import logging
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from vss import ApiDeclarations
-
-from .const import DOMAIN, MANUFACTURER, MODEL, SW_VERSION
+from .const import DOMAIN, MANUFACTURER, MODEL
+from .coordinator import VSSCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    host = config_entry.data["host"]
-    port = config_entry.data["port"]
-    client_id = config_entry.data["client_id"]
-    client_secret = config_entry.data["client_secret"]
-
-    if port is None:
-        port = "8081"
-
-    parent = hass.data[DOMAIN][config_entry.entry_id]
-    if parent is None:
-        parent = "Joan"
-
-    vss_api = ApiDeclarations(f"{host}:{port}/", client_id, client_secret)
-    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
+    """Set up VSS sensor entities."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
+    parent = data["device"]
 
     new_devices = []
-    for device in response:
-        new_devices.append(VSSDisplay(device, vss_api, parent))
+    for uuid in coordinator.data:
+        new_devices.append(VSSBatterySensor(coordinator, uuid, parent))
+        new_devices.append(VSSTemperatureSensor(coordinator, uuid, parent))
 
     if new_devices:
         async_add_devices(new_devices)
 
 
-class VSSDisplay(SensorEntity):
-    """Representation of an VSS display."""
+class VSSBaseSensor(CoordinatorEntity[VSSCoordinator], SensorEntity):
+    """Base class for VSS sensors."""
 
-    def __init__(self, device, vss, parent):
-        """Initialize the VSS display."""
-        self._vss = vss
-        self._device = parent
-        self._device_class = SensorDeviceClass.BATTERY
-        self._unit_of_measurement = "%"
-        self._icon = "mdi:tablet"
-        self._display = device["Displays"][0]
-        self._height = self._display["Height"]
-        self._online = device["State"]
-        self._rotation = self._display["Rotation"]
-        self._state = device["Status"]["Battery"]
-        self._uuid = device["Uuid"]
-        self._width = self._display["Width"]
-        self._name = None
-        self._orientation = None
+    _sensor_type: str = ""
 
-        if device["Options"]["Name"] is not None:
-            self._name = device["Options"]["Name"]
-
-        if self._rotation == 0 or self._rotation == 2:
-            self._orientation = "Portrait"
-        else:
-            self._orientation = "Landscape"
-
-        self._attributes = {
-            "connected": device["State"],
-            "rssi": device["Status"]["RSSI"],
-            "height": self._height,
-            "width": self._width,
-            "orientation": self._orientation,
-            "rotation": self._rotation,
-        }
+    def __init__(self, coordinator: VSSCoordinator, uuid: str, parent):
+        """Initialize the VSS sensor."""
+        super().__init__(coordinator)
+        self._uuid = uuid
+        self._parent = parent
 
     @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.BATTERY
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {
-                (DOMAIN, self._uuid),
-            },
-            "name": self._name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "sw_version": SW_VERSION,
-            "via_device": (DOMAIN, self._device.hub_id),
-        }
+    def _device_data(self):
+        """Return the current device data from the coordinator."""
+        return self.coordinator.data.get(self._uuid, {})
 
     @property
     def name(self) -> str:
         """Return the display name of this sensor."""
-        if self._name is not None:
-            return self._name
-        else:
-            return self._uuid
+        data = self._device_data
+        name = data.get("Options", {}).get("Name")
+        base = name if name else self._uuid
+        return f"{base} {self._sensor_type}"
 
     @property
-    def unique_id(self) -> str:
-        """Return the uuid of this sensor."""
-        return f"{self._uuid}_sensor"
+    def device_info(self):
+        """Return device info for this sensor."""
+        data = self._device_data
+        options = data.get("Options", {})
+        return {
+            "identifiers": {
+                (DOMAIN, self._uuid),
+            },
+            "name": options.get("Name") or self._uuid,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "sw_version": options.get("Firmware"),
+            "hw_version": options.get("Revision"),
+            "via_device": (DOMAIN, self._parent.hub_id),
+        }
+
+
+class VSSBatterySensor(VSSBaseSensor):
+    """Representation of a VSS display battery sensor."""
+
+    _sensor_type = "Battery"
+
+    def __init__(self, coordinator: VSSCoordinator, uuid: str, parent):
+        """Initialize the VSS battery sensor."""
+        super().__init__(coordinator, uuid, parent)
+        self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_icon = "mdi:tablet"
+        # Keep original unique_id for backward compatibility
+        self._attr_unique_id = f"{uuid}_sensor"
 
     @property
-    def icon(self) -> str:
-        """Return the icon for this sensor."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
+    def native_value(self):
+        """Return the battery level."""
+        data = self._device_data
+        return data.get("Status", {}).get("Battery")
 
     @property
     def extra_state_attributes(self):
         """Return additional attributes of the sensor."""
-        return self._attributes
+        data = self._device_data
+        if not data:
+            return None
 
-    def update(self):
-        """Fetch new state data for this sensor."""
-        status_code, device = self._vss.get_device(self._uuid)
+        display = data.get("Displays", [{}])[0]
+        status = data.get("Status", {})
+        options = data.get("Options", {})
+        rotation = display.get("Rotation", 0)
 
-        if not status_code == 200:
-            _LOGGER.error("Could not connect to VSS")
-            return
+        if rotation in (0, 2):
+            orientation = "Portrait"
+        else:
+            orientation = "Landscape"
 
-        if device is None:
-            _LOGGER.debug(
-                "Received no data for device {id}".format(**self._uuid))
-            return
+        attrs = {
+            "connected": data.get("State"),
+            "rssi": status.get("RSSI"),
+            "height": display.get("Height"),
+            "width": display.get("Width"),
+            "orientation": orientation,
+            "rotation": rotation,
+            "error_code": status.get("ErrorCode"),
+            "connect_reason": status.get("ConnectReason"),
+            "firmware": options.get("Firmware"),
+        }
 
-        self._uuid = device["Uuid"]
-        self._online = device["State"]
-        self._state = device["Status"]["Battery"]
-        self._display = device["Displays"][0]
-        self._rotation = self._display["Rotation"]
+        external_battery = status.get("ExternalBattery")
+        if external_battery is not None:
+            attrs["external_battery"] = external_battery
 
-        if device["Options"]["Name"] is not None:
-            self._name = device["Options"]["Name"]
+        return attrs
 
-        self._orientation = "Landscape"
-        if self._rotation == 0 or self._rotation == 2:
-            self._orientation = "Portrait"
 
-        self._attributes["connected"] = device["State"]
-        self._attributes["rssi"] = device["Status"]["RSSI"]
-        self._attributes["orientation"] = self._orientation
-        self._attributes["rotation"] = self._rotation
+class VSSTemperatureSensor(VSSBaseSensor):
+    """Representation of a VSS display temperature sensor."""
+
+    _sensor_type = "Temperature"
+
+    def __init__(self, coordinator: VSSCoordinator, uuid: str, parent):
+        """Initialize the VSS temperature sensor."""
+        super().__init__(coordinator, uuid, parent)
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_unique_id = f"{uuid}_temperature"
+
+    @property
+    def native_value(self):
+        """Return the device temperature."""
+        data = self._device_data
+        temp = data.get("Status", {}).get("Temperature")
+        if temp is not None:
+            try:
+                return float(temp)
+            except (ValueError, TypeError):
+                return None
+        return None

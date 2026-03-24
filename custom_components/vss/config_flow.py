@@ -1,4 +1,5 @@
 """Config flow for the VSS integration."""
+import asyncio
 import logging
 
 from vss import ApiDeclarations
@@ -18,14 +19,15 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     host = data["host"]
-    port = data["port"]
+    port = data.get("port", "8081")
     client_id = data["client_id"]
     client_secret = data["client_secret"]
 
-    if port is None:
-        port = "8081"
-
-    if len(port) > 5:
+    try:
+        port_int = int(port)
+        if not 1 <= port_int <= 65535:
+            raise InvalidPort
+    except ValueError:
         raise InvalidPort
 
     if len(host) < 3:
@@ -33,9 +35,15 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     vss_api = ApiDeclarations(f"{host}:{port}/", client_id, client_secret)
 
-    status_code, response = await hass.async_add_executor_job(vss_api.get_all_devices)
+    try:
+        status_code, response = await asyncio.wait_for(
+            hass.async_add_executor_job(vss_api.get_all_devices),
+            timeout=10,
+        )
+    except asyncio.TimeoutError:
+        raise CannotConnect
 
-    if not status_code == 200:
+    if status_code != 200:
         _LOGGER.error("Could not connect to VSS")
         raise CannotConnect
 
@@ -47,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for VSS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -73,6 +80,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidHost:
                 errors["base"] = "invalid_host"
+            except InvalidPort:
+                errors["base"] = "invalid_port"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

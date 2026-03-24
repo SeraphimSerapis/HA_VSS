@@ -12,9 +12,10 @@
         }
       }
     },
-    "abort": {
+    "error": {
       "cannot_connect": "Cannot connect to the VSS server.",
       "invalid_host": "Invalid host.",
+      "invalid_port": "Invalid port. Must be a number between 1 and 65535.",
       "unknown": "Other error."
     }
   }
