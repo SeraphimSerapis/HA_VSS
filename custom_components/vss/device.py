@@ -1,19 +1,19 @@
-"""A wrapper device to hold the setup information."""
+"""Runtime data shared by the VSS platforms."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.config_entries import ConfigEntry
+
+from .coordinator import VSSCoordinator
 
 
-class Device:
-    """A dummy device"""
+@dataclass
+class VSSData:
+    """Objects created during setup and stored on the config entry."""
 
-    manufacturer = "Visionect"
+    coordinator: VSSCoordinator
+    hub_device_id: str
 
-    def __init__(self, hass, host):
-        """Init dummy hub."""
-        self._host = host
-        self._hass = hass
-        self._name = host
-        self._id = host.lower()
 
-    @property
-    def hub_id(self):
-        """ID for dummy hub."""
-        return self._id
+type VSSConfigEntry = ConfigEntry[VSSData]

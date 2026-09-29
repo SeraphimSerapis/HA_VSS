@@ -10,13 +10,79 @@
           "host": "Host (incl. http(s))",
           "port": "Port"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate VSS",
+        "description": "The VSS server at {host} rejected the stored credentials. Enter a new Client ID and Client Secret.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure VSS",
+        "description": "Update the connection settings for the VSS server at {host}.",
+        "data": {
+          "port": "Port",
+          "client_id": "Client ID",
+          "client_secret": "Client Secret"
+        }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to the VSS server.",
+      "invalid_auth": "The VSS server rejected the Client ID or Client Secret.",
       "invalid_host": "Invalid host.",
       "invalid_port": "Invalid port. Must be a number between 1 and 65535.",
       "unknown": "Other error."
+    },
+    "abort": {
+      "already_configured": "This VSS server is already configured.",
+      "reauth_successful": "Reauthentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "VSS options",
+        "data": {
+          "scan_interval": "Update interval (minutes)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "external_battery": {
+        "name": "External battery"
+      },
+      "rssi": {
+        "name": "Signal strength"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "connect_reason": {
+        "name": "Connect reason"
+      }
+    },
+    "binary_sensor": {
+      "charger": {
+        "name": "Charger"
+      },
+      "connected": {
+        "name": "Connected"
+      }
     }
   }
 }

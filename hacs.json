@@ -1,5 +1,5 @@
 {
   "name": "VSS HA component",
-  "domains": ["vss"],
-  "homeassistant": "2021.12.0"
+  "homeassistant": "2026.8.2",
+  "render_readme": true
 }

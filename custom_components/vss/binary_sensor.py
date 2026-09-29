@@ -1,82 +1,100 @@
 """Platform for VSS binary sensor integration."""
-import logging
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import VSSCoordinator
+from .device import VSSConfigEntry
+from .entity import VSSEntity, async_add_new_devices
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+
+CHARGER = BinarySensorEntityDescription(
+    key="charger",
+    translation_key="charger",
+    device_class=BinarySensorDeviceClass.PLUG,
+)
+CONNECTED = BinarySensorEntityDescription(
+    key="connected",
+    translation_key="connected",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
+_ONLINE = {"online", "connected", "true", "1"}
+_OFFLINE = {"offline", "disconnected", "false", "0"}
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+def _charger_is_on(data: dict[str, Any]) -> bool | None:
+    """Return true if the charger is connected."""
+    charger = data.get("Status", {}).get("Charger")
+    if charger is None:
+        return None
+    try:
+        return int(charger) > 0
+    except (ValueError, TypeError):
+        return bool(charger)
+
+
+def _connected_is_on(data: dict[str, Any]) -> bool | None:
+    """Return true if the server reports the display as connected."""
+    state = data.get("State")
+    if isinstance(state, bool):
+        return state
+    if state is None:
+        return None
+    text = str(state).strip().lower()
+    if text in _ONLINE:
+        return True
+    if text in _OFFLINE:
+        return False
+    return None
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: VSSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up VSS binary sensor entities."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data["coordinator"]
-    parent = data["device"]
+    data = entry.runtime_data
 
-    new_devices = []
-    for uuid in coordinator.data:
-        new_devices.append(VSSChargerBinarySensor(coordinator, uuid, parent))
+    async_add_new_devices(
+        entry,
+        async_add_entities,
+        lambda uuid, _device_data: [
+            VSSBinarySensor(data.coordinator, uuid, data.hub_device_id, CHARGER),
+            VSSBinarySensor(data.coordinator, uuid, data.hub_device_id, CONNECTED),
+        ],
+    )
 
-    if new_devices:
-        async_add_devices(new_devices)
 
+class VSSBinarySensor(VSSEntity, BinarySensorEntity):
+    """Representation of a VSS display binary sensor."""
 
-class VSSChargerBinarySensor(CoordinatorEntity[VSSCoordinator], BinarySensorEntity):
-    """Representation of a VSS display charger status."""
-
-    def __init__(self, coordinator: VSSCoordinator, uuid: str, parent):
-        """Initialize the VSS charger binary sensor."""
-        super().__init__(coordinator)
-        self._uuid = uuid
-        self._parent = parent
-        self._attr_device_class = BinarySensorDeviceClass.PLUG
-        self._attr_unique_id = f"{uuid}_charger"
-
-    @property
-    def _device_data(self):
-        """Return the current device data from the coordinator."""
-        return self.coordinator.data.get(self._uuid, {})
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this binary sensor."""
-        data = self._device_data
-        name = data.get("Options", {}).get("Name")
-        if name:
-            return f"{name} Charger"
-        return f"{self._uuid} Charger"
-
-    @property
-    def device_info(self):
-        """Return device info for this binary sensor."""
-        data = self._device_data
-        options = data.get("Options", {})
-        return {
-            "identifiers": {
-                (DOMAIN, self._uuid),
-            },
-            "name": options.get("Name") or self._uuid,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "sw_version": options.get("Firmware"),
-            "hw_version": options.get("Revision"),
-            "via_device": (DOMAIN, self._parent.hub_id),
-        }
+    def __init__(
+        self,
+        coordinator: VSSCoordinator,
+        uuid: str,
+        hub_device_id: str,
+        description: BinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the VSS binary sensor."""
+        super().__init__(coordinator, uuid, hub_device_id, description.key)
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the charger is connected."""
-        data = self._device_data
-        charger = data.get("Status", {}).get("Charger")
-        if charger is None:
-            return None
-        try:
-            return int(charger) > 0
-        except (ValueError, TypeError):
-            return bool(charger)
+        """Return the binary sensor state."""
+        if self.entity_description.key == "charger":
+            return _charger_is_on(self._device_data)
+        return _connected_is_on(self._device_data)
